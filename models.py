@@ -1,19 +1,34 @@
-from flask_sqlalchemy import SQLAlchemy
-from extension import db
 
-
-class Todo(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    done = db.Column(db.Boolean(), nullable=False)
-    label = db.Column(db.String(50), nullable=False)
-
-    def serialize(self):
-        return {
-            'id': self.id,
-            'done': self.done,
-            'label':self.label,
-        }
     
+class FamilyStructure:
+    def __init__(self, last_name):
+        self.last_name = last_name
+        self._next_id = 1
+        self._members = []
+
+    def _generate_id(self):
+        generated_id = self._next_id
+        self._next_id += 1
+        return generated_id
+
+    def add_member(self, member):
+        data = member
+        self._members.append(data)
+        pass
+
+    def delete_member(self, id):
+        for i, member in enumerate(self._members):
+            if member['id'] == id:
+                del self._members[i]
+                return self._members       
+        pass
+
+    def get_member(self, id):
+        
+        for member in self._members:
+            if member['id'] == id:
+                return member
 
 
-
+    def get_all_members(self):
+        return self._members

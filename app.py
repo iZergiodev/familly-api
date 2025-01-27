@@ -1,35 +1,58 @@
 from flask import Flask, request, jsonify
-from models import Todo
-from extension import db
+from models import FamilyStructure
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///todo_list.db"
 
-db.init_app(app)
+jackson_family = FamilyStructure('Jackson')
 
-with app.app_context():
-    db.create_all()
+@app.route('/members', methods = ['GET'])
+def get_all_members():
+    data = jackson_family.get_all_members()
+    response_body = {
+        "family": data
+    }
 
-#Crear rutas
+    return jsonify(response_body), 200
 
-@app.route('/todos', methods = ['GET'])
-def get_todos():
-    todos = Todo.query.all()
-    return jsonify({'todos': [todo.serialize() for todo in todos]})
 
-@app.route('/todos', methods = ['POST'])
-def create_todo():
-    data = request.get_json()
-    todo = Todo(done = data['done'], label = data['label'])
-    db.session.add(todo)
-    db.session.commit()
 
-    return jsonify({'message':'Todo creado con éxito', 'todo': todo.serialize()}), 201
+@app.route('/member/<int:id>', methods = ['GET'])
+def get_member_by_id(id):
+    data = jackson_family.get_member(id)
 
-@app.route('/todos/<int:id>', methods = ['GET'])
-def get_todo(id):
-    todo = Todo.query.get(id)
-    if not todo:
-        return jsonify({'message':'Todo no encontrado'}), 404
-    return jsonify(todo.serialize())
+    return jsonify(data), 200
+
+
+
+
+@app.route('/members', methods = ['POST'])
+def create_member():
+    try:
+        data = request.get_json()
+
+        response = {
+            "id": jackson_family._generate_id(),
+            "first_name": data['first_name'],
+            "age": data['age'],
+            "lucky_numbers": data['lucky_numbers']
+        }
+
+        jackson_family.add_member(response)
+
+        return jsonify(response), 201
+
+    except Exception as e:
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
+
+
+@app.route('/member/<int:id>', methods = ['DELETE'])
+def delete_member(id):
+    result = jackson_family.delete_member(id)
+    
+    if "error" in result:
+        return jsonify(result), 404
+    else:
+        return jsonify(result), 200
 
